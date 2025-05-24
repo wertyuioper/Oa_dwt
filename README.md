@@ -16,8 +16,7 @@ The original dataset is named data_set, and the denoised version is data_set2.
 Please place both datasets in the same folder as the model.
 
 The ResNet-50 training noisy dataset (data_set) is available on Baidu Netdisk:
-Link: https://pan.baidu.com/s/1lMwS5HK4BaQE3x9mqa2eBg?pwd=5p6p
-Access code: 5p6p
+Link: https://pan.baidu.com/s/1lMwS5HK4BaQE3x9mqa2eBg?pwd=5p6p Access code: 5p6p
 The noisy dataset is named flower_data_daisy, and the denoised version is flower_data.
 Please place both datasets in the same folder as the model.
 
