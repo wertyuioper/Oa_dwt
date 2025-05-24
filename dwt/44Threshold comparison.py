@@ -15,44 +15,22 @@ os.makedirs(output_folder, exist_ok=True)
 image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.png', '.jpeg'))]
 
 def calculate_directional_threshold(high_freq, N, alpha=0.5, gamma=0.8):
-    """
-    根据高频分量计算改进的方向感知自适应阈值
-    :param high_freq: 高频分量数组
-    :param N: 系数数量
-    :param alpha: 调节系数
-    :param gamma: 非线性调整因子
-    :return: 自适应阈值
-    """
+  
     sigma = np.median(np.abs(high_freq)) / 0.6745  # 噪声标准差估计
     T = sigma * (np.log(N) ** gamma) * alpha      # 非线性动态阈值计算
     return T
 
 def soft_threshold(W, T):
-    """
-    软阈值处理
-    :param W: 高频分量数组
-    :param T: 阈值
-    :return: 处理后的高频分量
-    """
+   
     return np.sign(W) * np.maximum(np.abs(W) - T, 0)
 
 def traditional_threshold(W, T):
-    """
-    使用固定阈值的传统阈值处理
-    :param W: 高频分量数组
-    :param T: 固定阈值
-    :return: 处理后的高频分量
-    """
+   
     return np.sign(W) * np.maximum(np.abs(W) - T, 0)
 
 def add_gaussian_noise(image, mean=0, std=25):
-    """
-    向图像添加高斯噪声
-    :param image: 输入图像
-    :param mean: 噪声均值
-    :param std: 噪声标准差
-    :return: 添加噪声的图像
-    """
+   添加噪声的图像
+  
     noise = np.random.normal(mean, std, image.shape).astype(np.float32)
     noisy_image = np.clip(image + noise, 0, 255).astype(np.uint8)
     return noisy_image
@@ -67,16 +45,11 @@ for image_file in image_files:
     cv2.imwrite(os.path.join(output_folder, 'noisy_' + image_file), noisy_image_bgr)
     print(f'Saved noisy image: {os.path.join(output_folder, "noisy_" + image_file)}')
 
-    # 转换为YUV色彩空间
+
     image_yuv = cv2.cvtColor(noisy_image_bgr, cv2.COLOR_BGR2YUV)
-
-    # 小波基选择
     wavelet = 'db5'
-
-    # 处理亮度通道
     y_channel = image_yuv[:, :, 0]
 
-    # 分解到三级
     coeffs_1 = pywt.dwt2(y_channel, wavelet)
     (approx_1, (horizontal_1, vertical_1, diagonal_1)) = coeffs_1
 
@@ -86,13 +59,12 @@ for image_file in image_files:
     coeffs_3 = pywt.dwt2(approx_2, wavelet)
     (approx_3, (horizontal_3, vertical_3, diagonal_3)) = coeffs_3
 
-    # 对高频分量应用传统阈值处理
     fixed_threshold = 20  # 固定阈值
     horizontal_3_traditional = traditional_threshold(horizontal_3, fixed_threshold)
     vertical_3_traditional = traditional_threshold(vertical_3, fixed_threshold)
     diagonal_3_traditional = traditional_threshold(diagonal_3, fixed_threshold)
 
-    # 对高频分量应用方向感知阈值处理
+
     N3 = horizontal_3.size
     T3_h = calculate_directional_threshold(horizontal_3, N3)
     T3_v = calculate_directional_threshold(vertical_3, N3)
@@ -116,7 +88,7 @@ for image_file in image_files:
 
     denoised_y_channel_adaptive = cv2.resize(reconstructed_1_adaptive, (y_channel.shape[1], y_channel.shape[0]))
 
-    # 将降噪后的亮度通道替换回YUV图像中（传统方法）
+
     image_yuv_traditional = image_yuv.copy()
     image_yuv_traditional[:, :, 0] = denoised_y_channel_traditional
     denoised_bgr_image_traditional = cv2.cvtColor(image_yuv_traditional, cv2.COLOR_YUV2BGR)
